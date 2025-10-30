@@ -68,4 +68,3 @@ pub fn write_audit_event(event: &AuditEvent) -> Result<()> {
     tracing::debug!(event_type=%event.event_type, job_id=%event.job_id, "Audit event written");
     Ok(())
 }
-

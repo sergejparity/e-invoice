@@ -23,9 +23,7 @@ impl Default for AppConfig {
                 client_id: None,
                 token_url: None,
             },
-            certificate: CertificateConfig {
-                thumbprint: None,
-            },
+            certificate: CertificateConfig { thumbprint: None },
             sender: SenderConfig {
                 from_title: None,
                 from_eadrese: None,
@@ -50,7 +48,7 @@ pub struct CertificateConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SenderConfig {
-    pub from_title: Option<String>, // Display name/title for sender
+    pub from_title: Option<String>,   // Display name/title for sender
     pub from_eadrese: Option<String>, // Sender e-adrese identifier
 }
 
