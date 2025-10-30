@@ -117,5 +117,38 @@ pub async fn list_status() -> Result<Vec<JobStatus>, String> {
             updated_at: s.updated_at.to_rfc3339(),
             transmission_id: s.transmission_id,
         })
-        .collect())
+               .collect())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Settings {
+    pub certificate_thumbprint: Option<String>,
+    pub unifiedpost_address: Option<String>,
+    pub from_title: Option<String>,
+    pub from_eadrese: Option<String>,
+}
+
+#[tauri::command]
+pub async fn get_settings() -> Result<Settings, String> {
+    let cfg = config::load().map_err(|e| e.to_string())?;
+    Ok(Settings {
+        certificate_thumbprint: cfg.certificate.thumbprint,
+        unifiedpost_address: cfg.provider.base_url,
+        from_title: cfg.sender.from_title,
+        from_eadrese: cfg.sender.from_eadrese,
+    })
+}
+
+#[tauri::command]
+pub async fn update_settings(settings: Settings) -> Result<(), String> {
+    let mut cfg = config::load().unwrap_or_default();
+    
+    cfg.certificate.thumbprint = settings.certificate_thumbprint;
+    cfg.provider.base_url = settings.unifiedpost_address;
+    cfg.sender.from_title = settings.from_title;
+    cfg.sender.from_eadrese = settings.from_eadrese;
+    
+    config::store(&cfg).map_err(|e| e.to_string())?;
+    tracing::info!("Settings updated");
+    Ok(())
 }

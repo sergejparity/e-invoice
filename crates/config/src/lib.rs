@@ -8,6 +8,10 @@ const KEYCHAIN_SERVICE: &str = "lv.einvoice.credentials";
 pub struct AppConfig {
     #[serde(default)]
     pub provider: ProviderConfig,
+    #[serde(default)]
+    pub certificate: CertificateConfig,
+    #[serde(default)]
+    pub sender: SenderConfig,
 }
 
 impl Default for AppConfig {
@@ -19,6 +23,13 @@ impl Default for AppConfig {
                 client_id: None,
                 token_url: None,
             },
+            certificate: CertificateConfig {
+                thumbprint: None,
+            },
+            sender: SenderConfig {
+                from_title: None,
+                from_eadrese: None,
+            },
         }
     }
 }
@@ -27,9 +38,20 @@ impl Default for AppConfig {
 pub struct ProviderConfig {
     #[serde(default = "default_provider_kind")]
     pub kind: String, // "mock" | "unifiedpost"
-    pub base_url: Option<String>,
+    pub base_url: Option<String>, // Unifiedpost service address
     pub client_id: Option<String>,
     pub token_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CertificateConfig {
+    pub thumbprint: Option<String>, // Certificate thumbprint for signing
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SenderConfig {
+    pub from_title: Option<String>, // Display name/title for sender
+    pub from_eadrese: Option<String>, // Sender e-adrese identifier
 }
 
 fn default_provider_kind() -> String {

@@ -81,7 +81,9 @@ fn main() {
             commands::scan_folder,
             commands::validate_invoices,
             commands::enqueue_send,
-            commands::list_status
+            commands::list_status,
+            commands::get_settings,
+            commands::update_settings
         ])
         .setup(|_app| {
             let client = create_access_point_client()?;

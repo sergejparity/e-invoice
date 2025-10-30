@@ -139,6 +139,71 @@ async function main() {
   await refreshJobs();
   setInterval(refreshJobs, 2000);
   console.log("App initialized successfully");
+
+  // Settings UI
+  const settingsModal = document.getElementById("settings-modal");
+  const settingsBtn = document.getElementById("settings-btn");
+  const settingsClose = document.getElementById("settings-close");
+  const settingsCancel = document.getElementById("settings-cancel");
+  const settingsForm = document.getElementById("settings-form");
+
+  async function loadSettings() {
+    try {
+      const settings = await invoke("get_settings");
+      document.getElementById("cert-thumbprint").value = settings.certificate_thumbprint || "";
+      document.getElementById("unifiedpost-address").value = settings.unifiedpost_address || "";
+      document.getElementById("from-title").value = settings.from_title || "";
+      document.getElementById("from-eadrese").value = settings.from_eadrese || "";
+    } catch (e) {
+      console.error("Failed to load settings:", e);
+      alert("Failed to load settings: " + e);
+    }
+  }
+
+  settingsBtn.onclick = async () => {
+    await loadSettings();
+    settingsModal.style.display = "block";
+  };
+
+  settingsClose.onclick = () => {
+    settingsModal.style.display = "none";
+  };
+
+  settingsCancel.onclick = () => {
+    settingsModal.style.display = "none";
+  };
+
+  settingsForm.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const settings = {
+        certificate_thumbprint: document.getElementById("cert-thumbprint").value.trim() || null,
+        unifiedpost_address: document.getElementById("unifiedpost-address").value.trim() || null,
+        from_title: document.getElementById("from-title").value.trim() || null,
+        from_eadrese: document.getElementById("from-eadrese").value.trim() || null,
+      };
+      
+      // Convert empty strings to null
+      if (!settings.certificate_thumbprint) settings.certificate_thumbprint = null;
+      if (!settings.unifiedpost_address) settings.unifiedpost_address = null;
+      if (!settings.from_title) settings.from_title = null;
+      if (!settings.from_eadrese) settings.from_eadrese = null;
+
+      await invoke("update_settings", { settings });
+      alert("Settings saved successfully!");
+      settingsModal.style.display = "none";
+    } catch (e) {
+      console.error("Failed to save settings:", e);
+      alert("Failed to save settings: " + e);
+    }
+  };
+
+  // Close modal when clicking outside
+  window.onclick = (event) => {
+    if (event.target == settingsModal) {
+      settingsModal.style.display = "none";
+    }
+  };
 }
 
 // Wait for DOM and run
