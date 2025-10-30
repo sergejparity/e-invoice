@@ -1,0 +1,47 @@
+{
+  "package": {
+    "productName": "Latvian E-Invoice",
+    "version": "0.1.0"
+  },
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devPath": "../ui",
+    "distDir": "../ui"
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "identifier": "lv.einvoice.app",
+      "icon": []
+    },
+    "windows": [
+      {
+        "title": "Latvian E-Invoice",
+        "width": 1100,
+        "height": 720
+      }
+    ],
+    "allowlist": {
+      "all": false,
+      "dialog": {
+        "all": false,
+        "open": true
+      },
+      "fs": {
+        "all": false,
+        "readFile": true,
+        "readDir": true
+      },
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "security": {
+      "csp": null
+    }
+  }
+}
+
+

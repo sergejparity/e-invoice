@@ -1,0 +1,20 @@
+[package]
+name = "lat_einv_access_point"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "access_point"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+lat_einv_core = { path = "../core" }
+rand = { workspace = true }
+async-trait = { workspace = true }

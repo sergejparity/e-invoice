@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Latvian E-Invoice</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+      .row { margin-bottom: 12px; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ddd; padding: 8px; font-size: 13px; }
+      th { background: #f3f3f3; text-align: left; }
+      button { padding: 8px 12px; }
+      .ok { color: #2d7; }
+      .err { color: #d33; }
+    </style>
+  </head>
+  <body>
+    <h2>Latvian E-Invoice (PEPPOL via Unifiedpost)</h2>
+    
+    <div id="debug-status" style="padding: 8px; margin-bottom: 10px; background: #f0f0f0; font-size: 12px;">
+      Initializing...
+    </div>
+
+    <div class="row">
+      <button id="pick">Pick folder…</button>
+      <span id="folder"></span>
+    </div>
+
+    <div class="row">
+      <button id="scan">Scan XML</button>
+      <button id="validate">Validate</button>
+      <button id="send">Send</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Path</th><th>Size (bytes)</th><th>Valid</th><th>Errors</th></tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+
+    <h3>Jobs</h3>
+    <table>
+      <thead>
+        <tr><th>Job ID</th><th>State</th><th>Updated</th><th>Transmission</th><th>Last Error</th></tr>
+      </thead>
+      <tbody id="jobs"></tbody>
+    </table>
+
+    <script src="main.js"></script>
+  </body>
+</html>

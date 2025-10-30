@@ -1,0 +1,21 @@
+[package]
+name = "lat_einv_queue"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "queue"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sled = { workspace = true }
+tracing = { workspace = true }
+lat_einv_core = { path = "../core" }
+access_point = { package = "lat_einv_access_point", path = "../access_point" }
+rand = { workspace = true }
+chrono = { workspace = true }
+once_cell = { workspace = true }
+tokio = { workspace = true }

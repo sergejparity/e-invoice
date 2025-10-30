@@ -1,0 +1,32 @@
+# Rust
+/target/
+**/target/
+Cargo.lock
+
+# Tauri
+src-tauri/target/
+
+# Sled database
+.einv_queue/
+
+# Audit log
+audit.jsonl
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Credentials (NEVER commit these)
+*.pfx
+*.p12
+*.key
+*.pem
+.env
+secrets/
+
+
