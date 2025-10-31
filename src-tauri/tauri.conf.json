@@ -13,7 +13,7 @@
     "bundle": {
       "active": true,
       "identifier": "lv.einvoice.app",
-      "icon": []
+      "icon": ["icons/icon.png"]
     },
     "windows": [
       {

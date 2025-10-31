@@ -23,7 +23,6 @@ Cross-platform desktop application for sending e-invoices in Latvia via the PEPP
 ### Run in Development
 
 ```bash
-cd e_invoice2
 cargo tauri dev
 ```
 
@@ -132,7 +131,7 @@ Per VISS e-adrese guidelines, Unifiedpost is the PEPPOL Access Point for Latvia'
 ### Project Structure
 
 ```
-e_invoice2/
+e-invoice/
 ├── Cargo.toml              # Workspace manifest
 ├── src-tauri/              # Tauri app
 │   ├── src/

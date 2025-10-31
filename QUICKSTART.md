@@ -17,7 +17,6 @@
 
 3. Run the app:
    ```bash
-   cd e_invoice2
    cargo tauri dev
    ```
 
@@ -26,19 +25,29 @@
 1. Install Rust: Download from [rustup.rs](https://rustup.rs/)
 
 2. Install Build Tools:
-   - Visual Studio Build Tools with C++ workload
-   - Windows 10/11 SDK
+   - **Download** [Visual Studio Build Tools 2022](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)
+   - **Run installer** and select **"Desktop development with C++"** workload
+   - This includes the necessary C++ compilers and Windows SDK
+   - Click **"Install"** and wait for completion
+   
+   > **Note:** If Windows SDK wasn't included, download separately from [Windows SDK page](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
 
-3. Install Tauri CLI:
+3. **Verify Installation:**
+   - Open a **new** terminal/powershell window
+   - Run: `cl` - should show compiler info (not "command not found")
+   - Run: `rustc --version` - should show Rust version
+
+4. Install Tauri CLI:
    ```powershell
    cargo install tauri-cli@^1
    ```
 
-4. Run the app:
+5. Run the app:
    ```powershell
-   cd e_invoice2
    cargo tauri dev
    ```
+   
+   > **Note:** On first run, this will compile all dependencies and may take several minutes
 
 ## Basic Usage (Mock Mode)
 
