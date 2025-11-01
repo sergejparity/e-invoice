@@ -31,3 +31,4 @@ pub trait AccessPointClient: Send + Sync {
 
 pub mod mock;
 pub mod unifiedpost;
+pub mod div_service;

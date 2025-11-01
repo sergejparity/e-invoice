@@ -1,15 +1,18 @@
-# Latvian E-Invoice Application (PEPPOL via Unifiedpost)
+# Latvian E-Invoice Application
 
-Cross-platform desktop application for sending e-invoices in Latvia via the PEPPOL network through Unifiedpost Access Point.
+Cross-platform desktop application for sending e-invoices in Latvia with support for multiple delivery methods.
 
 ## Features
 
 - **GUI Application** – Tauri-based native app for macOS and Windows
 - **UBL 2.1 EN16931 Validation** – Parse and validate PEPPOL BIS 3.0 invoices
-- **PEPPOL Integration** – Send invoices via Unifiedpost Access Point
+- **Multiple Delivery Methods**:
+  - **DIV UnifiedService** – Latvia's official e-adrese system (SOAP/X509)
+  - **Unifiedpost** – PEPPOL access point for cross-border invoices
+  - **Mock** – Local testing mode
 - **Persistent Queue** – Background sender with retries and delivery tracking
 - **Audit Trail** – JSON lines audit log for compliance
-- **Secure Credentials** – OS keychain integration for API keys and secrets
+- **Secure Credentials** – OS keychain integration for API keys and certificates
 
 ## Quick Start
 
@@ -51,11 +54,33 @@ By default, the app runs with a **mock access point** that simulates sending wit
 kind = "mock"
 ```
 
-### Production Configuration (Unifiedpost)
+### DIV UnifiedService Configuration (Latvia e-adrese)
+
+To use Latvia's official DIV UnifiedService:
+
+**⚠️ Status**: Currently in development. See `DIV_INTEGRATION.md` for complete details.
+
+1. **Edit the config file**:
+   ```toml
+   [provider]
+   kind = "div"
+   base_url = "https://div.vraa.gov.lv/Vraa.Div.WebService.UnifiedInterface/UnifiedService.svc"
+   
+   [certificate]
+   thumbprint = "your-cert-thumbprint"
+   
+   [sender]
+   from_title = "Your Company Ltd"
+   from_eadrese = "your-identifier@vraa.gov.lv"
+   ```
+
+2. **Obtain certificates** from VRAA and store securely.
+
+### Unifiedpost Configuration (PEPPOL)
 
 To enable real PEPPOL sending via Unifiedpost:
 
-1. **Edit the config file** to set the provider:
+1. **Edit the config file**:
    ```toml
    [provider]
    kind = "unifiedpost"
@@ -114,17 +139,30 @@ All invoice send events are logged to `audit.jsonl` in JSON Lines format:
 - **Static UI** (`ui/`) – Vanilla HTML/JS frontend for folder picker, invoice list, status table.
 - **Core Crates**:
   - `crates/core` – UBL parsing, EN16931 validation.
-  - `crates/access_point` – AccessPointClient trait, Mock + Unifiedpost implementations.
+  - `crates/access_point` – AccessPointClient trait, Mock + Unifiedpost + DIV implementations.
   - `crates/queue` – Persistent sled-backed job queue with async sender.
   - `crates/config` – App config and OS keychain integration.
 
-## PEPPOL & Unifiedpost
+## Delivery Methods
+
+### DIV UnifiedService (Latvia e-adrese)
+
+Latvia's official e-adrese system for domestic e-invoice delivery via SOAP/X509.
+
+**⚠️ Status**: Currently in development. See `DIV_INTEGRATION.md` for implementation details.
+
+**Requirements**:
+- Client X509 certificate registered with VRAA
+- Agreement with VRAA for service access
+
+### Unifiedpost (PEPPOL)
 
 Per VISS e-adrese guidelines, Unifiedpost is the PEPPOL Access Point for Latvia's e-adrese integration. Institutions must conclude an agreement with Unifiedpost before production use.
 
 **References:**
 - [VISS e-adrese guideline](https://viss.gov.lv/lv/Informacijai/Dokumentacija/Vadlinijas/e-adrese)
 - [Unifiedpost PEPPOL](https://www.unifiedpost.com/)
+- [VRAA](https://www.vraa.gov.lv)
 
 ## Development
 
@@ -144,7 +182,7 @@ e-invoice/
 │   └── main.js
 └── crates/
     ├── core/               # Parsing & validation
-    ├── access_point/       # Mock & Unifiedpost clients
+    ├── access_point/       # Mock, Unifiedpost, DIV clients
     ├── queue/              # Job queue + audit log
     └── config/             # Config + keychain
 ```
@@ -163,6 +201,11 @@ cargo test
 ```
 
 ## Troubleshooting
+
+### "DIV UnifiedService not configured"
+- Ensure `provider.kind = "div"` in config.
+- Set `base_url`, `certificate.thumbprint`, and `sender.from_eadrese`.
+- Verify certificate is properly installed and registered with VRAA.
 
 ### "Unifiedpost client not configured"
 - Ensure `provider.kind = "unifiedpost"` in config.

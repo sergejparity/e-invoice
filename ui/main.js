@@ -150,6 +150,7 @@ async function main() {
   async function loadSettings() {
     try {
       const settings = await invoke("get_settings");
+      document.getElementById("provider-kind").value = settings.provider_kind || "mock";
       document.getElementById("cert-thumbprint").value = settings.certificate_thumbprint || "";
       document.getElementById("unifiedpost-address").value = settings.unifiedpost_address || "";
       document.getElementById("from-title").value = settings.from_title || "";
@@ -177,6 +178,7 @@ async function main() {
     e.preventDefault();
     try {
       const settings = {
+        provider_kind: document.getElementById("provider-kind").value.trim() || null,
         certificate_thumbprint: document.getElementById("cert-thumbprint").value.trim() || null,
         unifiedpost_address: document.getElementById("unifiedpost-address").value.trim() || null,
         from_title: document.getElementById("from-title").value.trim() || null,
@@ -190,7 +192,7 @@ async function main() {
       if (!settings.from_eadrese) settings.from_eadrese = null;
 
       await invoke("update_settings", { settings });
-      alert("Settings saved successfully!");
+      alert("Settings saved successfully! Please restart the application for the changes to take effect.");
       settingsModal.style.display = "none";
     } catch (e) {
       console.error("Failed to save settings:", e);

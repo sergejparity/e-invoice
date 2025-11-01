@@ -18,3 +18,5 @@ tracing = { workspace = true }
 lat_einv_core = { path = "../core" }
 rand = { workspace = true }
 async-trait = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }

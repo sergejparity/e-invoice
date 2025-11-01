@@ -6,6 +6,7 @@
 mod commands;
 
 use access_point::{
+    div_service::DivServiceClient,
     mock::MockClient,
     unifiedpost::{UnifiedpostAuth, UnifiedpostClient},
     AccessPointClient,
@@ -25,6 +26,29 @@ fn create_access_point_client() -> anyhow::Result<Arc<dyn AccessPointClient>> {
     let cfg = config::load().unwrap_or_default();
 
     match cfg.provider.kind.as_str() {
+        "div" => {
+            let base_url = cfg
+                .provider
+                .base_url
+                .ok_or_else(|| anyhow::anyhow!("DIV UnifiedService base_url not configured"))?;
+
+            let cert_thumbprint = cfg
+                .certificate
+                .thumbprint
+                .ok_or_else(|| anyhow::anyhow!("Certificate thumbprint not configured"))?;
+
+            let sender_eaddress = cfg
+                .sender
+                .from_eadrese
+                .ok_or_else(|| anyhow::anyhow!("Sender e-adrese not configured"))?;
+
+            tracing::info!("Using DIV UnifiedService");
+            Ok(DivServiceClient::new(
+                base_url,
+                cert_thumbprint,
+                sender_eaddress,
+            ))
+        }
         "unifiedpost" => {
             let base_url = cfg
                 .provider

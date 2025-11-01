@@ -122,6 +122,7 @@ pub async fn list_status() -> Result<Vec<JobStatus>, String> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
+    pub provider_kind: Option<String>,
     pub certificate_thumbprint: Option<String>,
     pub unifiedpost_address: Option<String>,
     pub from_title: Option<String>,
@@ -132,6 +133,7 @@ pub struct Settings {
 pub async fn get_settings() -> Result<Settings, String> {
     let cfg = config::load().map_err(|e| e.to_string())?;
     Ok(Settings {
+        provider_kind: Some(cfg.provider.kind),
         certificate_thumbprint: cfg.certificate.thumbprint,
         unifiedpost_address: cfg.provider.base_url,
         from_title: cfg.sender.from_title,
@@ -143,6 +145,9 @@ pub async fn get_settings() -> Result<Settings, String> {
 pub async fn update_settings(settings: Settings) -> Result<(), String> {
     let mut cfg = config::load().unwrap_or_default();
 
+    if let Some(kind) = settings.provider_kind {
+        cfg.provider.kind = kind;
+    }
     cfg.certificate.thumbprint = settings.certificate_thumbprint;
     cfg.provider.base_url = settings.unifiedpost_address;
     cfg.sender.from_title = settings.from_title;

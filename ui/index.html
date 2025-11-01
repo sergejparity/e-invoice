@@ -65,11 +65,18 @@
           <span class="close" id="settings-close">&times;</span>
         </div>
         <form class="settings-form" id="settings-form">
+          <label for="provider-kind">Delivery Method:</label>
+          <select id="provider-kind" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+            <option value="mock">Mock (Testing)</option>
+            <option value="div">DIV UnifiedService (Latvia e-adrese)</option>
+            <option value="unifiedpost">Unifiedpost (PEPPOL)</option>
+          </select>
+          
           <label for="cert-thumbprint">Certificate Thumbprint:</label>
           <input type="text" id="cert-thumbprint" placeholder="Enter certificate thumbprint (SHA1 or SHA256)">
           
-          <label for="unifiedpost-address">Unifiedpost Service Address:</label>
-          <input type="text" id="unifiedpost-address" placeholder="https://api.unifiedpost.com">
+          <label for="unifiedpost-address">Service Address:</label>
+          <input type="text" id="unifiedpost-address" placeholder="https://div.vraa.gov.lv/... or https://api.unifiedpost.com">
           
           <label for="from-title">From Title:</label>
           <input type="text" id="from-title" placeholder="Sender display name/title">
