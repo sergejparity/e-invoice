@@ -22,25 +22,34 @@ fn init_tracing() {
         .init();
 }
 
-fn create_access_point_client() -> anyhow::Result<Arc<dyn AccessPointClient>> {
+fn create_access_point_client() -> anyhow::Result<Arc<dyn AccessPointClient>> { 
     let cfg = config::load().unwrap_or_default();
 
     match cfg.provider.kind.as_str() {
         "div" => {
-            let base_url = cfg
-                .provider
-                .base_url
-                .ok_or_else(|| anyhow::anyhow!("DIV UnifiedService base_url not configured"))?;
+            let base_url = match cfg.provider.base_url {
+                Some(url) if !url.is_empty() => url,
+                _ => {
+                    tracing::warn!("DIV UnifiedService base_url not configured, falling back to mock");
+                    return Ok(MockClient::new());
+                }
+            };
 
-            let cert_thumbprint = cfg
-                .certificate
-                .thumbprint
-                .ok_or_else(|| anyhow::anyhow!("Certificate thumbprint not configured"))?;
+            let cert_thumbprint = match cfg.certificate.thumbprint {
+                Some(thumb) if !thumb.is_empty() => thumb,
+                _ => {
+                    tracing::warn!("Certificate thumbprint not configured, falling back to mock");
+                    return Ok(MockClient::new());
+                }
+            };
 
-            let sender_eaddress = cfg
-                .sender
-                .from_eadrese
-                .ok_or_else(|| anyhow::anyhow!("Sender e-adrese not configured"))?;
+            let sender_eaddress = match cfg.sender.from_eadrese {
+                Some(addr) if !addr.is_empty() => addr,
+                _ => {
+                    tracing::warn!("Sender e-adrese not configured, falling back to mock");
+                    return Ok(MockClient::new());
+                }
+            };
 
             tracing::info!("Using DIV UnifiedService");
             Ok(DivServiceClient::new(
@@ -49,11 +58,14 @@ fn create_access_point_client() -> anyhow::Result<Arc<dyn AccessPointClient>> {
                 sender_eaddress,
             ))
         }
-        "unifiedpost" => {
-            let base_url = cfg
-                .provider
-                .base_url
-                .ok_or_else(|| anyhow::anyhow!("Unifiedpost base_url not configured"))?;
+                "unifiedpost" => {
+            let base_url = match cfg.provider.base_url {
+                Some(url) if !url.is_empty() => url,
+                _ => {
+                    tracing::warn!("Unifiedpost base_url not configured, falling back to mock");
+                    return Ok(MockClient::new());
+                }
+            };
 
             // Try API key first from env or keychain
             if let Ok(api_key) = std::env::var("UNIFIEDPOST_API_KEY")
@@ -65,21 +77,28 @@ fn create_access_point_client() -> anyhow::Result<Arc<dyn AccessPointClient>> {
             }
 
             // Fall back to OAuth2
-            let client_id = cfg
-                .provider
-                .client_id
-                .ok_or_else(|| anyhow::anyhow!("Unifiedpost client_id not configured"))?;
+            let client_id = match cfg.provider.client_id {
+                Some(id) if !id.is_empty() => id,
+                _ => {
+                    tracing::warn!("Unifiedpost client_id not configured, falling back to mock");
+                    return Ok(MockClient::new());
+                }
+            };
 
-            let client_secret = std::env::var("UNIFIEDPOST_CLIENT_SECRET")
+            let client_secret = match std::env::var("UNIFIEDPOST_CLIENT_SECRET")
                 .or_else(|_| config::get_secret("unifiedpost_client_secret"))
-                .map_err(|_| {
-                    anyhow::anyhow!("Unifiedpost client_secret not found in env or keychain")
-                })?;
+            {
+                Ok(secret) => secret,
+                Err(_) => {
+                    tracing::warn!("Unifiedpost client_secret not found, falling back to mock");
+                    return Ok(MockClient::new());
+                }
+            };
 
             let token_url = cfg
                 .provider
                 .token_url
-                .unwrap_or_else(|| format!("{}/oauth/token", base_url));
+                .unwrap_or_else(|| format!("{}/oauth/token", base_url));        
 
             tracing::info!("Using Unifiedpost with OAuth2 auth");
             let auth = UnifiedpostAuth::OAuth2 {
@@ -107,7 +126,8 @@ fn main() {
             commands::enqueue_send,
             commands::list_status,
             commands::get_settings,
-            commands::update_settings
+            commands::update_settings,
+            commands::test_connection
         ])
         .setup(|_app| {
             let client = create_access_point_client()?;

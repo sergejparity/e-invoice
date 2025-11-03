@@ -53,33 +53,29 @@ Validates recipient e-adrese identifiers before sending.
 - Added configuration support for DIV provider
 - Updated UI with provider selector dropdown
 - Integrated client factory in `main.rs`
+- **Implemented DIV Envelope type definitions** with proper XML serialization
+- **Implemented DIV Envelope construction** using parsed UBL metadata
+- **Implemented SOAP envelope building** for SendMessage and GetNotificationList
+- **Implemented status polling framework** with response type definitions
+- **Integrated UBL parsing** to extract invoice metadata automatically
 
-### ⚠️ In Progress
+**See**: `DIV_IMPLEMENTATION_STATUS.md` for complete implementation details.
 
-- Basic SOAP envelope construction
-- DIV Envelope wrapping of UBL invoices
-- Status tracking implementation
+### ⚠️ Production Readiness Required
 
-### 🔲 TODO (Production Readiness)
+The implementation is **structurally complete** but requires additional work before production use:
 
-The current implementation is a **skeleton** that needs significant work before production use:
+#### 1. ✅ Generate XSD Types - COMPLETED
 
-#### 1. Generate XSD Types
+~~The UnifiedService WSDL references multiple complex XML schemas...~~
 
-The UnifiedService WSDL references multiple complex XML schemas:
-- `http://ivis.eps.gov.lv/XMLSchemas/100001/DIV/v1-0` - DIV Envelope schema
-- `http://ivis.eps.gov.lv/XMLSchemas/100001/Person/v1-0` - Person schemas
-- `http://ivis.eps.gov.lv/XMLSchemas/100001/Address/v1-1` - Address schemas
-- Additional schemas for attachments, signatures, etc.
+**Status**: ✅ **DONE** - Created manual type definitions in `crates/access_point/src/div_types.rs`:
+- DIV Envelope structure with all required fields
+- Document metadata, transport metadata, recipients
+- Proper XML serialization with namespaces
+- SHA-256 digest computation
 
-**Action**: Use `wsdl2rust` or similar tool to generate proper Rust types:
-
-```bash
-# Generate Rust bindings from WSDL
-wsdl2rust --schemas UnifiedService.xml --output crates/access_point/src/div_types/
-```
-
-Or manually define the key types based on the XSDs.
+**Note**: Manual implementation chosen over generated code for better control and maintainability.
 
 #### 2. Certificate-Based Authentication
 
@@ -116,69 +112,52 @@ let soap = SoapMessage::new()
     .with_body(div_envelope);
 ```
 
-#### 4. Proper DIV Envelope Construction
+#### 4. ✅ Proper DIV Envelope Construction - COMPLETED
 
-The DIV Envelope has complex requirements:
+**Status**: ✅ **DONE** - Implemented in `crates/access_point/src/div_types.rs`:
+
+The DIV Envelope includes all complex requirements:
 
 **GeneralMetadata**:
-- Title, Date, DocumentKind (must be EINVOICE)
-- Authors (sender institution information)
-- Description (optional)
+- ✅ Title, Date, DocumentKind (EINVOICE)
+- ✅ Authors (sender institution information)
+- ✅ Description (optional)
 
 **SenderTransportMetadata**:
-- SenderE-Address (required)
-- SenderRefNumber (unique client reference)
-- Recipients (list of RecipientEntry with E-Addresses)
-- Priority (high/normal/low)
-- DeliveryDeadline (optional)
-- NotifySenderOnDelivery (boolean)
+- ✅ SenderE-Address (required)
+- ✅ SenderRefNumber (unique client reference)
+- ✅ Recipients (list of RecipientEntry with E-Addresses)
+- ✅ Priority (high/normal/low)
+- ✅ DeliveryDeadline (optional)
+- ✅ NotifySenderOnDelivery (boolean)
 
 **PayloadReference**:
-- File metadata (MIME type, size, name)
-- ContentReference (CID reference for MTOM attachment)
-- DigestMethod and DigestValue (SHA-256 hash of XML)
-- Compressed flag
+- ✅ File metadata (MIME type, size, name)
+- ✅ ContentReference (CID reference for MTOM attachment)
+- ✅ DigestMethod and DigestValue (SHA-256 hash of XML)
+- ✅ Compressed flag
 
-**Action**: Create proper struct definitions with serde serialization:
+**Implementation**: Manual XML serialization with proper namespace handling.
 
-```rust
-#[derive(Debug, Serialize)]
-#[serde(rename = "Envelope")]
-pub struct DivEnvelope {
-    #[serde(rename = "$value")]
-    pub sender_document: SenderDocument,
-}
+#### 5. ✅ UBL Invoice Processing - COMPLETED
 
-#[derive(Debug, Serialize)]
-pub struct SenderDocument {
-    #[serde(rename = "@Id")]
-    pub id: String,
-    pub document_metadata: DocumentMetadata,
-    pub sender_transport_metadata: SenderTransportMetadata,
-}
-// ... etc
-```
+**Status**: ✅ **DONE** - Integrated UBL parsing:
+- Uses existing `lat_einv_core::parsing::parse_ubl_invoice()`
+- Extracts invoice number, issue date, supplier/customer names
+- Automatically calculates SHA-256 digest
+- Populates DIV Envelope with extracted metadata
 
-#### 5. UBL Invoice Processing
+#### 6. ✅ Status Tracking Framework - COMPLETED
 
-Extract proper metadata from UBL invoices:
-- Invoice ID
-- Issue date
-- Currency
-- Sender/receiver identifiers
-- Tax information
-- Line items
+**Status**: ✅ **DONE** - Implemented polling infrastructure:
+- SOAP request building for GetNotificationList
+- Response type definitions for all notification types
+- Status mapping from DIV states to DeliveryState enum
+- Basic error handling implemented
 
-**Action**: Parse UBL XML using the existing `lat_einv_core::parsing` module and extract required fields.
+**Note**: Full XML parsing not yet implemented; returns InFlight by default.
 
-#### 6. Status Tracking
-
-Implement proper polling using `GetNotificationList`:
-- Parse notification types: MessageProcessed, NewMessage, MessageDelivered
-- Map DIV statuses to `DeliveryState` enum
-- Handle error states and retries
-
-#### 7. Error Handling
+#### 7. ⚠️ Error Handling - IN PROGRESS
 
 DIV service errors are returned in SOAP fault messages:
 - HTTP 500 with SOAP Fault body

@@ -200,6 +200,65 @@ async function main() {
     }
   };
 
+  // Test connection button handler
+  document.getElementById("test-connection-btn").onclick = async () => {
+    const statusDiv = document.getElementById("connection-test-status");
+    const testBtn = document.getElementById("test-connection-btn");
+    
+    // Save current form values first so test uses the latest configuration
+    try {
+      const settings = {
+        provider_kind: document.getElementById("provider-kind").value.trim() || null,
+        certificate_thumbprint: document.getElementById("cert-thumbprint").value.trim() || null,
+        unifiedpost_address: document.getElementById("unifiedpost-address").value.trim() || null,
+        from_title: document.getElementById("from-title").value.trim() || null,
+        from_eadrese: document.getElementById("from-eadrese").value.trim() || null,
+      };
+      
+      // Convert empty strings to null
+      if (!settings.certificate_thumbprint) settings.certificate_thumbprint = null;
+      if (!settings.unifiedpost_address) settings.unifiedpost_address = null;
+      if (!settings.from_title) settings.from_title = null;
+      if (!settings.from_eadrese) settings.from_eadrese = null;
+
+      // Save settings first
+      await invoke("update_settings", { settings });
+      
+      // Show testing status
+      statusDiv.style.display = "block";
+      statusDiv.style.background = "#fff3cd";
+      statusDiv.style.border = "1px solid #ffc107";
+      statusDiv.style.color = "#856404";
+      statusDiv.textContent = "Testing connection...";
+      testBtn.disabled = true;
+      
+      // Test connection
+      const result = await invoke("test_connection");
+      
+      // Show result
+      if (result.success) {
+        statusDiv.style.background = "#d4edda";
+        statusDiv.style.border = "1px solid #28a745";
+        statusDiv.style.color = "#155724";
+        statusDiv.textContent = "✓ Connection test successful: " + result.message;
+      } else {
+        statusDiv.style.background = "#f8d7da";
+        statusDiv.style.border = "1px solid #dc3545";
+        statusDiv.style.color = "#721c24";
+        statusDiv.textContent = "✗ Connection test failed: " + result.message;
+      }
+    } catch (e) {
+      console.error("Connection test error:", e);
+      statusDiv.style.display = "block";
+      statusDiv.style.background = "#f8d7da";
+      statusDiv.style.border = "1px solid #dc3545";
+      statusDiv.style.color = "#721c24";
+      statusDiv.textContent = "✗ Error testing connection: " + e;
+    } finally {
+      testBtn.disabled = false;
+    }
+  };
+
   // Close modal when clicking outside
   window.onclick = (event) => {
     if (event.target == settingsModal) {

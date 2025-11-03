@@ -84,7 +84,10 @@
           <label for="from-eadrese">From E-adrese:</label>
           <input type="text" id="from-eadrese" placeholder="Sender e-adrese identifier (e.g., LV:1234567890)">
           
-          <div style="display: flex; gap: 8px;">
+          <div id="connection-test-status" style="margin-top: 16px; padding: 12px; border-radius: 4px; display: none; font-size: 13px;"></div>
+          
+          <div style="display: flex; gap: 8px; margin-top: 16px;">
+            <button type="button" id="test-connection-btn" style="background: #007bff; color: white;">Test Connection</button>
             <button type="submit">Save</button>
             <button type="button" id="settings-cancel">Cancel</button>
           </div>

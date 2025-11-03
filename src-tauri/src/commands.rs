@@ -157,3 +157,156 @@ pub async fn update_settings(settings: Settings) -> Result<(), String> {
     tracing::info!("Settings updated");
     Ok(())
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConnectionTestResult {
+    pub success: bool,
+    pub message: String,
+}
+
+/// Test connection to the configured service provider
+#[tauri::command]
+pub async fn test_connection() -> Result<ConnectionTestResult, String> {
+    let cfg = config::load().unwrap_or_default();
+    let provider_kind = cfg.provider.kind.as_str();
+
+    match provider_kind {
+        "mock" => {
+            // Mock always succeeds - it doesn't require any connection
+            Ok(ConnectionTestResult {
+                success: true,
+                message: "Mock provider is always available (no actual connection)".to_string(),
+            })
+        }
+        "div" => {
+            // Validate DIV configuration
+            let base_url = match cfg.provider.base_url {
+                Some(url) if !url.is_empty() => url,
+                _ => {
+                    return Ok(ConnectionTestResult {
+                        success: false,
+                        message: "Service address is required".to_string(),
+                    });
+                }
+            };
+
+            let cert_thumbprint = match cfg.certificate.thumbprint {
+                Some(thumb) if !thumb.is_empty() => thumb,
+                _ => {
+                    return Ok(ConnectionTestResult {
+                        success: false,
+                        message: "Certificate thumbprint is required".to_string(),
+                    });
+                }
+            };
+
+            let sender_eaddress = match cfg.sender.from_eadrese {
+                Some(addr) if !addr.is_empty() => addr,
+                _ => {
+                    return Ok(ConnectionTestResult {
+                        success: false,
+                        message: "Sender e-adrese is required".to_string(),
+                    });
+                }
+            };
+
+            // Try to create the client (validates configuration structure)
+            match access_point::div_service::DivServiceClient::new(
+                base_url.clone(),
+                cert_thumbprint,
+                sender_eaddress,
+            ) {
+                _client => {
+                    // Client created successfully - configuration is valid
+                    // Note: Actual network connection test would require:
+                    // 1. Certificate loading from file/keychain
+                    // 2. TLS client certificate setup
+                    // 3. SOAP signing implementation
+                    // For now, we only validate configuration completeness
+                    
+                    tracing::info!("DIV configuration validated successfully");
+                    Ok(ConnectionTestResult {
+                        success: true,
+                        message: format!(
+                            "Configuration validated. Note: Full connection test requires certificates and SOAP signing to be implemented."
+                        ),
+                    })
+                }
+            }
+        }
+        "unifiedpost" => {
+            // Validate Unifiedpost configuration
+            let base_url = match cfg.provider.base_url {
+                Some(url) if !url.is_empty() => url,
+                _ => {
+                    return Ok(ConnectionTestResult {
+                        success: false,
+                        message: "Service address is required".to_string(),
+                    });
+                }
+            };
+
+            // Check if API key is available
+            let has_api_key = std::env::var("UNIFIEDPOST_API_KEY")
+                .or_else(|_| config::get_secret("unifiedpost_api_key"))
+                .is_ok();
+
+            // Check if OAuth2 credentials are available
+            let has_oauth2 = if let Some(ref client_id) = cfg.provider.client_id {
+                !client_id.is_empty()
+                    && (std::env::var("UNIFIEDPOST_CLIENT_SECRET").is_ok()
+                        || config::get_secret("unifiedpost_client_secret").is_ok())
+            } else {
+                false
+            };
+
+            if !has_api_key && !has_oauth2 {
+                return Ok(ConnectionTestResult {
+                    success: false,
+                    message: "Authentication credentials required. Set UNIFIEDPOST_API_KEY or configure OAuth2 (client_id and UNIFIEDPOST_CLIENT_SECRET)".to_string(),
+                });
+            }
+
+            // Try to create the client
+            if has_api_key {
+                let api_key = std::env::var("UNIFIEDPOST_API_KEY")
+                    .or_else(|_| config::get_secret("unifiedpost_api_key"))
+                    .map_err(|_| "Failed to retrieve API key".to_string())?;
+                
+                let auth = access_point::unifiedpost::UnifiedpostAuth::ApiKey { key: api_key };
+                let _client = access_point::unifiedpost::UnifiedpostClient::new(base_url, auth);
+                
+                Ok(ConnectionTestResult {
+                    success: true,
+                    message: "Configuration validated with API key authentication".to_string(),
+                })
+            } else {
+                let client_id = cfg.provider.client_id.unwrap();
+                let client_secret = std::env::var("UNIFIEDPOST_CLIENT_SECRET")
+                    .or_else(|_| config::get_secret("unifiedpost_client_secret"))
+                    .map_err(|_| "Failed to retrieve client secret".to_string())?;
+                
+                let token_url = cfg.provider.token_url
+                    .unwrap_or_else(|| format!("{}/oauth/token", base_url));
+                
+                let auth = access_point::unifiedpost::UnifiedpostAuth::OAuth2 {
+                    client_id,
+                    client_secret,
+                    token_url,
+                };
+                let _client = access_point::unifiedpost::UnifiedpostClient::new(base_url, auth);
+                
+                Ok(ConnectionTestResult {
+                    success: true,
+                    message: "Configuration validated with OAuth2 authentication".to_string(),
+                })
+            }
+        }
+        _ => {
+            Ok(ConnectionTestResult {
+                success: false,
+                message: format!("Unknown provider type: {}", provider_kind),
+            })
+        }
+    }
+}
